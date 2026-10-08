@@ -143,6 +143,9 @@ def charge(key: str, *, pre: bool, session_id: str = "", **delta: int) -> dict:
         con.execute("INSERT OR IGNORE INTO units(key, started, updated) VALUES(?,?,?)", (key, now, now))
         row = dict(con.execute("SELECT * FROM units WHERE key=?", (key,)).fetchone())
         if row["tripped"]:
+            if not pre:  # it already happened: record it so receipts don't undercount
+                con.execute("UPDATE units SET updated=?, " + ", ".join(f"{c}={c}+?" for c in COUNTERS)
+                            + " WHERE key=?", (now, *(int(delta.get(c, 0)) for c in COUNTERS), key))
             con.execute("COMMIT")
             return {"allowed": False, "reason": row["tripped"], "warn": None}
         new = {**row, **{k: row[k] + int(v) for k, v in delta.items()}}
@@ -210,8 +213,10 @@ def _synthetic_response(api_mode: str, text: str):
 
 def on_llm_execution(request=None, next_call=None, session_id="", api_mode="", **_):
     key = unit_key(session_id)
-    verdict = charge(key, pre=True, session_id=session_id, model_calls=1)
-    if verdict["allowed"] or api_mode not in REFUSABLE_MODES:
+    refusable = api_mode in REFUSABLE_MODES
+    # unrefusable modes: the call goes out regardless, so count it as having happened
+    verdict = charge(key, pre=refusable, session_id=session_id, model_calls=1)
+    if verdict["allowed"] or not refusable:
         return next_call(request)  # unsupported modes fall back to tool blocking
     return _synthetic_response(api_mode, refusal(key, verdict["reason"]))
 

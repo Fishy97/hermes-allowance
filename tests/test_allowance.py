@@ -60,6 +60,10 @@ def test_unsupported_api_mode_falls_back_to_real_call(ha, monkeypatch):
     assert ha.on_llm_execution(request={}, next_call=nxt, session_id="s", api_mode="codex_responses") == "real"
     assert ha.on_llm_execution(request={}, next_call=nxt, session_id="s", api_mode="codex_responses") == "real"
     assert ha.on_pre_tool_call(tool_name="x", session_id="s")["action"] == "block"
+    # calls that went out after the trip, and their tokens, are still counted
+    assert ha.on_llm_execution(request={}, next_call=nxt, session_id="s", api_mode="codex_responses") == "real"
+    ha.on_post_api_request(session_id="s", usage={"total_tokens": 70})
+    assert "tokens=70 model_calls=3 " in ha.status()
 
 
 def test_subagents_roll_up_to_root_and_delegation_is_counted(ha, monkeypatch):

@@ -115,6 +115,13 @@ sh tests/backstop.sh           # systemd deadline and fork cap
 - **Paperclip issue:** a second process on the same exhausted issue sends 0 calls, and a different issue keeps its own budget.
 - **Delegation:** a parent and its subagent together stop at one shared limit.
 
+## Issues and contributions
+
+Bug reports and small PRs are welcome. The repo is maintained with help from a Hermes agent, which reviews new issues regularly and ships small, tested fixes. The most useful bug reports include:
+- `hermes --version`
+- the provider and API mode
+- the receipt line from `receipts.jsonl`
+
 ## License
 
 MIT
