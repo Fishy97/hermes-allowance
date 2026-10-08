@@ -1,0 +1,17 @@
+#!/bin/sh
+# Hard OS backstop for any agent process: run it in a transient systemd user scope that the
+# kernel kills, process tree included, on wall-clock, memory or process-count limits.
+# The plugin cannot cancel a model call already in flight; this can.
+#
+#   allowance-run hermes chat -q "..."
+#   ALLOWANCE_MINUTES=30 ALLOWANCE_MEMORY=2G ALLOWANCE_TASKS=128 allowance-run <command...>
+#
+# Exit 143 (SIGTERM) or 137 (SIGKILL) means a limit stopped it. Linux + systemd only.
+set -eu
+[ "$#" -gt 0 ] || { echo "usage: allowance-run <command> [args...]" >&2; exit 2; }
+command -v systemd-run >/dev/null || { echo "allowance-run: systemd-run not found" >&2; exit 2; }
+exec systemd-run --user --scope --quiet --collect \
+  -p "RuntimeMaxSec=${ALLOWANCE_SECONDS:-$(( ${ALLOWANCE_MINUTES:-60} * 60 ))}" \
+  -p "MemoryMax=${ALLOWANCE_MEMORY:-4G}" \
+  -p "TasksMax=${ALLOWANCE_TASKS:-512}" \
+  -- "$@"

@@ -1,0 +1,10 @@
+name: hermes-allowance
+version: 0.1.0
+description: "A fixed allowance of tokens, model calls, tool calls, subagents and minutes per unit of work (session tree, Paperclip issue or named job). Works when the price is $0. Stops the turn with a clear message and writes a receipt."
+author: Fishy97
+kind: standalone
+provides_hooks:
+  - post_api_request
+  - pre_tool_call
+  - subagent_start
+  - transform_tool_result
