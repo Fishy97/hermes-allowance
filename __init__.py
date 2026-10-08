@@ -257,7 +257,8 @@ def status(limit: int = 15) -> str:
     finally:
         con.close()
     lim = load_config()["limits"]
-    head = "limits: " + ", ".join(f"{k}={'∞' if not v else f'{v:g}'}" for k, v in lim.items())
+    head = "limits: " + ", ".join(f"{k}={'∞' if not v else f'{v:,.0f}' if v == int(v) else f'{v:g}'}"
+                                  for k, v in lim.items())
     if not rows:
         return head + "\n(no units yet)"
     lines = [head]
