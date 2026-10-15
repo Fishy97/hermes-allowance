@@ -105,7 +105,7 @@ plugins:
 def run_hermes(home: Path, env_extra: dict, toolsets: str = "terminal") -> tuple[int, str, int]:
     env = {k: v for k, v in os.environ.items()
            if not k.startswith(("HERMES_", "PAPERCLIP_")) and not k.endswith(("_API_KEY", "_TOKEN"))}
-    env.update(HERMES_HOME=str(home), **env_extra)
+    env.update(HERMES_HOME=str(home), HERMES_GATEWAY_LOCK_DIR=str(home / "locks"), **env_extra)  # own gateway lock dir: newer Hermes shares one per OS user
     before = len(agent_requests)
     p = subprocess.run(["hermes", "chat", "-q", "Keep working until done.", "-Q", "--yolo", "-t", toolsets],
                        env=env, capture_output=True, text=True, timeout=300)
